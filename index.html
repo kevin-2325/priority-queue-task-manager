@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Priority Queue Task Manager - Python Min-Heap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.294.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #151c2c;
+      --bg-card-hover: #1c263c;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(56, 189, 248, 0.3);
+      
+      --accent-blue: #38bdf8;
+      --accent-blue-glow: rgba(56, 189, 248, 0.25);
+      --accent-purple: #a855f7;
+      
+      --priority-high: #ef4444;
+      --priority-high-bg: rgba(239, 68, 68, 0.12);
+      --priority-high-border: rgba(239, 68, 68, 0.3);
+      
+      --priority-normal: #f59e0b;
+      --priority-normal-bg: rgba(245, 158, 11, 0.12);
+      --priority-normal-border: rgba(245, 158, 11, 0.3);
+      
+      --priority-low: #10b981;
+      --priority-low-bg: rgba(16, 185, 129, 0.12);
+      --priority-low-border: rgba(16, 185, 129, 0.3);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.05) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0284c7, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #f8fafc, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: white;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-highlight);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-highlight);
+      transform: translateY(-2px);
+    }
+
+    .stat-info h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .stat-info .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Main Content Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Peek Banner */
+    .peek-banner {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.15), rgba(124, 58, 237, 0.15));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .peek-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .peek-badge {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-blue);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .peek-title {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .peek-meta {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Task Filters & Search */
+    .task-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .search-box {
+      position: relative;
+      flex-grow: 1;
+      max-width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 14px 8px 38px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Task Cards List */
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 200px;
+    }
+
+    .task-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-highlight);
+      transform: translateX(4px);
+    }
+
+    .task-card.priority-1 {
+      border-left: 4px solid var(--priority-high);
+    }
+
+    .task-card.priority-2 {
+      border-left: 4px solid var(--priority-normal);
+    }
+
+    .task-card.priority-3 {
+      border-left: 4px solid var(--priority-low);
+    }
+
+    .task-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .task-header-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .task-name {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .priority-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .priority-pill.p-1 {
+      background: var(--priority-high-bg);
+      color: var(--priority-high);
+      border: 1px solid var(--priority-high-border);
+    }
+
+    .priority-pill.p-2 {
+      background: var(--priority-normal-bg);
+      color: var(--priority-normal);
+      border: 1px solid var(--priority-normal-border);
+    }
+
+    .priority-pill.p-3 {
+      background: var(--priority-low-bg);
+      color: var(--priority-low);
+      border: 1px solid var(--priority-low-border);
+    }
+
+    .task-details {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .order-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Heap Structure Visualizer */
+    .heap-container {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .heap-array {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .heap-node {
+      min-width: 70px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+      position: relative;
+    }
+
+    .heap-node.root {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 12px var(--accent-blue-glow);
+    }
+
+    .heap-node-idx {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .heap-node-prio {
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .heap-node-name {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* Activity Log */
+    .activity-log {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .log-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.82rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 3px solid transparent;
+    }
+
+    .log-item.enqueue {
+      border-left-color: var(--accent-blue);
+    }
+
+    .log-item.dequeue {
+      border-left-color: var(--priority-low);
+    }
+
+    .log-time {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .log-text {
+      color: var(--text-secondary);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 520px;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      transform: translateY(20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+    }
+
+    .close-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* Processed Task Modal Card */
+    .processed-card {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .processed-card i {
+      width: 48px;
+      height: 48px;
+      color: #34d399;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="layers"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Priority Queue Task Manager</h1>
+          <p>
+            <span class="status-badge"><span class="status-pulse"></span> Localhost Python Server</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="resetQueue()">
+          <i data-lucide="rotate-ccw"></i> Reset Samples
+        </button>
+        <button class="btn btn-success" onclick="dequeueTask()">
+          <i data-lucide="play"></i> Process Next Task (Dequeue)
+        </button>
+        <button class="btn btn-primary" onclick="openEnqueueModal()">
+          <i data-lucide="plus-circle"></i> Enqueue New Task
+        </button>
+      </div>
+    </header>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>Total Waiting Tasks</h3>
+          <div class="stat-value" id="stat-total">0</div>
+        </div>
+        <div class="stat-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);">
+          <i data-lucide="list-todo"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>High Priority (P1)</h3>
+          <div class="stat-value" id="stat-high" style="color: var(--priority-high);">0</div>
+        </div>
+        <div class="stat-icon" style="background: var(--priority-high-bg); color: var(--priority-high);">
+          <i data-lucide="alert-triangle"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>Normal Priority (P2)</h3>
+          <div class="stat-value" id="stat-normal" style="color: var(--priority-normal);">0</div>
+        </div>
+        <div class="stat-icon" style="background: var(--priority-normal-bg); color: var(--priority-normal);">
+          <i data-lucide="clock"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>Completed / Processed</h3>
+          <div class="stat-value" id="stat-processed" style="color: var(--priority-low);">0</div>
+        </div>
+        <div class="stat-icon" style="background: var(--priority-low-bg); color: var(--priority-low);">
+          <i data-lucide="check-circle-2"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Peek Banner -->
+    <div class="peek-banner" id="peek-banner">
+      <div class="peek-left">
+        <span class="peek-badge">NEXT TO PROCESS (PEEK)</span>
+        <div>
+          <div class="peek-title" id="peek-task-name">Loading...</div>
+          <div class="peek-meta" id="peek-task-meta">Assigned To: - | Priority: -</div>
+        </div>
+      </div>
+      <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="dequeueTask()">
+        Process Now <i data-lucide="arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Main Task List Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i data-lucide="list" style="color: var(--accent-blue);"></i> Waiting Queue (Heap Sorted)
+          </div>
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="clearQueue()">
+            <i data-lucide="trash-2"></i> Clear Queue
+          </button>
+        </div>
+
+        <div class="task-controls">
+          <div class="filter-tabs">
+            <button class="tab-btn active" onclick="setFilter('all', this)">All Tasks</button>
+            <button class="tab-btn" onclick="setFilter('1', this)">High (P1)</button>
+            <button class="tab-btn" onclick="setFilter('2', this)">Normal (P2)</button>
+            <button class="tab-btn" onclick="setFilter('3', this)">Low (P3)</button>
+          </div>
+
+          <div class="search-box">
+            <i data-lucide="search"></i>
+            <input type="text" id="search-input" placeholder="Search tasks or assignees..." oninput="renderTasks()">
+          </div>
+        </div>
+
+        <div class="tasks-list" id="tasks-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Side Panel: Heap Visualizer & Activity Log -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Heap Array Visualizer -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i data-lucide="binary" style="color: var(--accent-purple);"></i> Min-Heap Memory Array
+            </div>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
+            Python <code>heapq</code> array order where <code>[0]</code> is always the min-element root.
+          </p>
+
+          <div class="heap-container">
+            <div class="heap-array" id="heap-nodes-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i data-lucide="activity" style="color: var(--accent-blue);"></i> Real-Time Activity Log
+            </div>
+          </div>
+
+          <div class="activity-log" id="activity-log-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enqueue Modal -->
+  <div class="modal-overlay" id="enqueue-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Enqueue New Task</div>
+        <button class="close-btn" onclick="closeEnqueueModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <form id="enqueue-form" onsubmit="handleEnqueueSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Task Name *</label>
+          <input type="text" class="form-input" id="input-name" placeholder="e.g. Deploy Database Backup" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Assigned To *</label>
+          <input type="text" class="form-input" id="input-assigned" placeholder="e.g. Tony" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Priority Level *</label>
+          <select class="form-select" id="input-priority" required>
+            <option value="1">🔥 High Priority (1)</option>
+            <option value="2" selected>⚡ Normal Priority (2)</option>
+            <option value="3">🌱 Low Priority (3)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="input-desc" rows="3" placeholder="Add task details..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+          <button type="button" class="btn btn-secondary" onclick="closeEnqueueModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i data-lucide="plus"></i> Add to Queue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dequeued Result Modal -->
+  <div class="modal-overlay" id="dequeue-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Processed Task (Dequeued)</div>
+        <button class="close-btn" onclick="closeDequeueModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="processed-card">
+        <i data-lucide="check-circle-2"></i>
+        <h3 id="dequeued-task-name" style="font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;">-</h3>
+        <p id="dequeued-task-desc" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">-</p>
+        <div style="display: flex; justify-content: center; gap: 12px; font-size: 0.85rem;">
+          <span class="priority-pill" id="dequeued-task-prio">-</span>
+          <span style="color: var(--text-muted);" id="dequeued-task-assign">Assigned: -</span>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: center;">
+        <button class="btn btn-primary" onclick="closeDequeueModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentTasksPriority = [];
+    let currentTasksHeap = [];
+    let currentFilter = 'all';
+
+    async function fetchQueueData() {
+      try {
+        const res = await fetch('/api/tasks');
+        const data = await res.json();
+        currentTasksPriority = data.tasks_priority_order || [];
+        currentTasksHeap = data.tasks_heap_order || [];
+        
+        updateStats(data.stats);
+        updatePeek(data.stats.next_task);
+        renderTasks();
+        renderHeapArray();
+        renderActivityLog(data.history);
+      } catch (err) {
+        console.error('Failed to fetch tasks:', err);
+      }
+    }
+
+    function updateStats(stats) {
+      document.getElementById('stat-total').innerText = stats.total_waiting;
+      document.getElementById('stat-high').innerText = stats.high_priority;
+      document.getElementById('stat-normal').innerText = stats.normal_priority;
+      document.getElementById('stat-processed').innerText = stats.processed_count;
+    }
+
+    function updatePeek(nextTask) {
+      const banner = document.getElementById('peek-banner');
+      if (!nextTask) {
+        document.getElementById('peek-task-name').innerText = "Queue is Empty";
+        document.getElementById('peek-task-meta').innerText = "No pending tasks waiting to be processed";
+        return;
+      }
+      document.getElementById('peek-task-name').innerText = nextTask.name;
+      document.getElementById('peek-task-meta').innerText = `Assigned To: ${nextTask.assigned_to} | Priority: ${nextTask.priority_name} (${nextTask.priority})`;
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('tasks-container');
+      const searchQuery = document.getElementById('search-input').value.toLowerCase();
+
+      let filtered = currentTasksPriority.filter(t => {
+        const matchesFilter = currentFilter === 'all' || String(t.priority) === currentFilter;
+        const matchesSearch = t.name.toLowerCase().includes(searchQuery) ||
+                              t.assigned_to.toLowerCase().includes(searchQuery) ||
+                              t.description.toLowerCase().includes(searchQuery);
+        return matchesFilter && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i data-lucide="inbox"></i>
+            <p>No waiting tasks found matching current filters.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = filtered.map((task, idx) => `
+        <div class="task-card priority-${task.priority}">
+          <div class="task-main">
+            <div class="task-header-line">
+              <span class="task-name">${escapeHtml(task.name)}</span>
+              <span class="priority-pill p-${task.priority}">${task.priority_name} (${task.priority})</span>
+            </div>
+            <div class="task-details">${escapeHtml(task.description || 'No description provided.')}</div>
+            <div class="task-meta">
+              <span class="meta-item"><i data-lucide="user" style="width:14px;"></i> ${escapeHtml(task.assigned_to)}</span>
+              <span class="meta-item"><i data-lucide="clock" style="width:14px;"></i> Enqueued ${task.created_at || ''}</span>
+              <span class="order-badge">Order #${task.order}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function renderHeapArray() {
+      const container = document.getElementById('heap-nodes-container');
+      if (currentTasksHeap.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size:0.85rem; padding:10px;">Heap array is empty.</div>';
+        return;
+      }
+
+      container.innerHTML = currentTasksHeap.map((t, idx) => `
+        <div class="heap-node ${idx === 0 ? 'root' : ''}">
+          <div class="heap-node-idx">[${idx}]</div>
+          <div class="heap-node-prio" style="color: ${getPrioColor(t.priority)};">P${t.priority}</div>
+          <div class="heap-node-name" title="${escapeHtml(t.name)}">${escapeHtml(t.name)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderActivityLog(history) {
+      const container = document.getElementById('activity-log-container');
+      if (!history || history.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size:0.85rem; padding:10px;">No recent activity.</div>';
+        return;
+      }
+
+      container.innerHTML = history.map(item => {
+        const isEnqueue = item.action === 'enqueue';
+        const icon = isEnqueue ? 'plus-circle' : 'check-circle';
+        const actionLabel = isEnqueue ? 'Enqueued' : 'Dequeued';
+        return `
+          <div class="log-item ${item.action}">
+            <i data-lucide="${icon}" style="width:16px; height:16px; color:${isEnqueue ? 'var(--accent-blue)' : 'var(--priority-low)'}; flex-shrink:0; margin-top:2px;"></i>
+            <div>
+              <div class="log-text">
+                <strong>${actionLabel}:</strong> "${escapeHtml(item.task.name)}" (${item.task.priority_name})
+              </div>
+              <div class="log-time">${item.timestamp}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function getPrioColor(priority) {
+      if (priority === 1) return 'var(--priority-high)';
+      if (priority === 2) return 'var(--priority-normal)';
+      return 'var(--priority-low)';
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    /* Modal Controls */
+    function openEnqueueModal() {
+      document.getElementById('enqueue-modal').classList.add('active');
+    }
+
+    function closeEnqueueModal() {
+      document.getElementById('enqueue-modal').classList.remove('active');
+      document.getElementById('enqueue-form').reset();
+    }
+
+    async function handleEnqueueSubmit(event) {
+      event.preventDefault();
+      const name = document.getElementById('input-name').value;
+      const assigned_to = document.getElementById('input-assigned').value;
+      const priority = parseInt(document.getElementById('input-priority').value);
+      const description = document.getElementById('input-desc').value;
+
+      try {
+        const res = await fetch('/api/enqueue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, assigned_to, priority, description })
+        });
+        const data = await res.json();
+        closeEnqueueModal();
+        fetchQueueData();
+      } catch (err) {
+        alert('Failed to enqueue task: ' + err);
+      }
+    }
+
+    async function dequeueTask() {
+      try {
+        const res = await fetch('/api/dequeue', { method: 'POST' });
+        const data = await res.json();
+        if (!data.task) {
+          alert("Queue is currently empty! Enqueue some tasks first.");
+          return;
+        }
+
+        document.getElementById('dequeued-task-name').innerText = data.task.name;
+        document.getElementById('dequeued-task-desc').innerText = data.task.description || 'No description provided.';
+        
+        const prioBadge = document.getElementById('dequeued-task-prio');
+        prioBadge.innerText = `${data.task.priority_name} Priority (${data.task.priority})`;
+        prioBadge.className = `priority-pill p-${data.task.priority}`;
+        
+        document.getElementById('dequeued-task-assign').innerText = `Assigned To: ${data.task.assigned_to}`;
+
+        document.getElementById('dequeue-modal').classList.add('active');
+        fetchQueueData();
+      } catch (err) {
+        alert('Failed to process task: ' + err);
+      }
+    }
+
+    function closeDequeueModal() {
+      document.getElementById('dequeue-modal').classList.remove('active');
+    }
+
+    async function resetQueue() {
+      if (confirm("Reset queue back to sample tasks?")) {
+        await fetch('/api/reset', { method: 'POST' });
+        fetchQueueData();
+      }
+    }
+
+    async function clearQueue() {
+      if (confirm("Are you sure you want to clear all waiting tasks?")) {
+        await fetch('/api/clear', { method: 'POST' });
+        fetchQueueData();
+      }
+    }
+
+    // Initial Load & Auto Refresh
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchQueueData();
+      lucide.createIcons();
+      setInterval(fetchQueueData, 5000);
+    });
+  </script>
+</body>
+</html>
